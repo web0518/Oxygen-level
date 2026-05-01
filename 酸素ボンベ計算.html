@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>酸素ボンベ計算機</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --bg-color: #f4f7f6;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+        h2 {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .result-area {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-left: 5px solid var(--accent-color);
+            border-radius: 4px;
+        }
+        .result-label {
+            font-size: 0.85rem;
+            color: #777;
+        }
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+        .warning {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>ECMO搬送 酸素計算機</h2>
+    
+    <div class="form-group">
+        <label>1. ボンベ容量 (L)</label>
+        <select id="capacity">
+            <option value="1.1">1.1 L</option>
+            <option value="2.0">2.0 L</option>
+            <option value="2.9">2.9 L</option>
+            <option value="5.0">5.0 L</option>
+            <option value="10">10 L</option>
+            <option value="20">20 L</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>2. ボンベ残圧 (MPa)</label>
+        <input type="number" id="pressure" placeholder="例: 14.7" step="0.1">
+    </div>
+
+    <div class="form-group">
+        <label>3. 設定流量 (L/min)</label>
+        <input type="number" id="flow" placeholder="例: 5.0" step="0.5">
+    </div>
+
+    <div class="result-area">
+        <div class="result-label">概算残り時間：</div>
+        <div id="time-result" class="result-value">-- 分</div>
+        <div id="hm-result" style="font-size: 0.9rem; color: #333; margin-top: 5px;"></div>
+    </div>
+
+    <div class="warning">
+        ※計算式: 容量(L) × 圧力(MPa) × 10 ÷ 流量<br>
+        ※残圧が2〜3MPaになった時点でボンベ交換を推奨します。<br>
+        ※搬送時は予備を含め「必要量の2倍」の酸素携行を検討してください。
+    </div>
+</div>
+
+<script>
+    const capacityEl = document.getElementById('capacity');
+    const pressureEl = document.getElementById('pressure');
+    const flowEl = document.getElementById('flow');
+    const timeResultEl = document.getElementById('time-result');
+    const hmResultEl = document.getElementById('hm-result');
+
+    function calculate() {
+        const capacity = parseFloat(capacityEl.value);
+        const pressure = parseFloat(pressureEl.value);
+        const flow = parseFloat(flowEl.value);
+
+        if (capacity && pressure && flow && flow > 0) {
+            // 日本の一般的な計算式: 容量(L) × 圧力(MPa) × 10 = 使用可能酸素量(L)
+            const availableOxygen = capacity * pressure * 8
+            ;
+            const totalMinutes = Math.floor(availableOxygen / flow);
+            
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+
+            timeResultEl.innerText = totalMinutes + " 分";
+            if (hours > 0) {
+                hmResultEl.innerText = "（約 " + hours + " 時間 " + minutes + " 分）";
+            } else {
+                hmResultEl.innerText = "";
+            }
+        } else {
+            timeResultEl.innerText = "-- 分";
+            hmResultEl.innerText = "";
+        }
+    }
+
+    [capacityEl, pressureEl, flowEl].forEach(el => {
+        el.addEventListener('input', calculate);
+    });
+</script>
+
+</body>
+</html>
